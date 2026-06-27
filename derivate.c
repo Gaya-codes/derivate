@@ -630,8 +630,14 @@ node* derivate(node* root)
 
 void calculate_const(node* root)
 {   
+    float b = 0;
+
+    if(root->right != NULL){
+
+        b = ((root->right)->data).value;
+    }
+
     float a = ((root->left)->data).value; 
-    float b = ((root->right)->data).value;
 
     switch((root->data).type)
     {
@@ -640,6 +646,11 @@ void calculate_const(node* root)
         case SUB : (root->data).value = a - b; break;
         case DIV : (root->data).value = a / b; break;
         case POW : (root->data).value = powf(a,b); break;
+        case COS : (root->data).value = cosf(a); break;
+        case SIN : (root->data).value = sinf(a); break;
+        case SQRT : (root->data).value = sqrtf(a); break;
+        case EXP : (root->data).value = expf(a); break;
+        case LOG : (root->data).value = logf(a); break;
     }
 
     (root->data).type = CONST;
@@ -1250,7 +1261,7 @@ bool simplify(node** root, bool neg)
     
     TokenType operation = ((*root)->data).type;
 
-    if((left_type == CONST) && (right_type == CONST)){
+    if((left_type == CONST && right_type == CONST) || (left_type == CONST && (*root)->right == NULL)){
 
         calculate_const(*root);
         recall = true;
@@ -1509,10 +1520,6 @@ expression[strcspn(expression, "\n")] = '\0';
 
 token* tokens = lexer(expression);
 
-//(x^2 + 1) / sqrt(x^3)
-//(2 * x) / (x^2 + 1) + exp(2 * x) * (3 / x)
-//(cos(0) + 3^2) / (5 * 2)
-
 token* index = tokens;
 
 node* AST = parse_expression(&index);
@@ -1532,6 +1539,7 @@ while(recall){
 
 node* derivated_AST = derivate(AST);
 
+simplify_substraction(derivated_AST);
 simplify_substraction(derivated_AST);
 
 distribute(&derivated_AST);
